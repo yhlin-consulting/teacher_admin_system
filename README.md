@@ -40,6 +40,14 @@ For Docker Compose, add the `docker-in-docker` feature to the `features` section
 }
 ```
 
+Set up `.env` file in project root directory
+```
+MYSQL_DATABASE=mydb
+MYSQL_USER=appuser
+MYSQL_PASSWORD=apppassword
+MYSQL_ROOT_PASSWORD=secretpassword
+```
+
 Use NestJS CLI to create a new NestJS project using `npx`
 `npx @nestjs/cli new admin_app`
 
