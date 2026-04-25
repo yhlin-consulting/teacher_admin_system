@@ -1,124 +1,105 @@
-# teacher_admin_system
-NodeJS API Assessment
+# Teacher Admin System
 
-## Commands
+A robust NodeJS API built with **NestJS**, **TypeORM**, and **MySQL**. This system provides teachers with administrative tools to manage student registrations, identify common students between classes, and filter recipients for notifications based on suspension status and mentions.
 
-### Local Development
+## Getting Started
 
-VS Code Extensions
-If you are using VS Code, install the following from the marketplace, or add them to the `devcontainer.json` file.
-- Prettier linting tool
-- Microsoft Container Tool
-- Docker Tool
+### 1. Prerequisites
+Ensure you have the following installed:
+* **Docker** & **Docker Compose**
+* **Node.js** (v18 or v22 recommended)
+* **VS Code** (Recommended for DevContainer and linting support)
 
-For Docker Compose, add the `docker-in-docker` feature to the `features` section om `devcontainer.json` file.
+### 2. Environment Configuration
+Create a `.env` file in the project root directory. This file is used by both the NestJS application and Docker Compose to manage sensitive credentials securely:
 
-`devcontainer.json`
-```
-{
-	"name": "Node.js & TypeScript",guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:4-22-bookworm",
-    //"build": {
-    //    "dockerfile": "../admin_app/Dockerfile",
-    //    "context": ".."
-    //},
-    "features": {
-        "ghcr.io/devcontainers/features/docker-in-docker:2": {
-            "version": "latest",
-            "enableNonRootDocker": true,
-            "moby": true
-        }
-    },
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"esbenp.prettier-vscode",
-				"ms-azuretools.vscode-containers"
-			]
-		}
-	}
-}
-```
-
-Set up `.env` file in project root directory
-```
+```env
 MYSQL_DATABASE=mydb
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
 MYSQL_USER=appuser
 MYSQL_PASSWORD=apppassword
 MYSQL_ROOT_PASSWORD=secretpassword
 ```
 
-Use NestJS CLI to create a new NestJS project using `npx`
-`npx @nestjs/cli new admin_app`
-
-Add test modules
-`npm install --save-dev @types/jest`
-
-In `tsconfig.json` file, add this to compilerOptions
+## Installation
 ```
-types: ["jest", "node"]
+# Install project dependencies
+npm install
 ```
 
-Check versions
-`node --version`
-
-To run project in local development 
-`npm run start:dev`
-Whenever a file changes, this change is detected and auto-restarts the server.
-
-
-Using MySQL
-Install NestJS TypeORM wrapper, base TypeORM library, and mysql2 driver
-`npm install @nestjs/typeorm typeorm mysql2`
-
-Using OpenAPI (Swagger) Documentation
-`npm install --save @nestjs/swagger`
-
-You can open localhost:3000/api to view the API documentation in OpenAPI (Swagger) format!
-
-Request/Response validation
-`npm install class-validator class-transformer`
-
-Linting
-If you are using VS Code, to format on save, add the prettier extension to your devcontainer or install the extension through the marketplace in VS Code. See VS Code section above.
-
-Or, you can run `npm run format`.
-Ensure that in your `package.json` file, in the `scripts` section, you can see the entry `format`.
-
-Create a folder `.vscode`
-In the folder, create the file `settings.json`.
-In `settings.json` file, add the following:
+## Run the Application
 ```
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  }
-}
+# Start MySQL via Docker-Compose
+./builder.sh run
+
+# Development mode (with auto-reload)
+npm run start:dev
+
+# Production mode
+npm run build
+npm run start
 ```
 
-## `builder.sh` file
-This file contains commands for you to run the project more easily.
+## API Documentation
+Once the server is running, you can access the interactive Swagger UI to explore and test the endpoints (Register, Common Students, Suspend, and Retrieve for Notifications):
 
-If you encounter permission errors, run the following command:
-`chmod +x builder.sh`
+`http://localhost:3000/api`
 
-Run Tests
-`npm run test` - Run all test (Good for production)
-`npm run test:watch` - Run only the tests where code changes occur (Good for development)
+## Development Environment
 
-Project Strucure
+### VS Code & DevContainers
+This project includes a .devcontainer configuration to ensure a consistent environment across different machines.
+
+Extensions included: Prettier, ESLint, Microsoft Container/Docker Tools.
+
+Features: Includes `docker-in-docker` for managing database containers from within the DevContainer.
+
+Format on Save: Pre-configured in `.vscode/settings.json` to use Prettier and ESLint auto-fix.
+
+### Manual Formatting & Linting
+```
+# Run Prettier to format code
+npm run format
+
+# Run ESLint to check for code quality issues
+npm run lint
+```
+
+## Testing
+
+The system includes comprehensive Unit and E2E (End-to-End) tests to ensure all user stories meet requirements. E2E tests are performed against a live MySQL instance to verify database constraints and relationships.
+
+### Test Commands
+
+| Command | Description |
+| :--- | :--- |
+| `npm run test` | Run unit tests across the entire project. |
+| `npm run test:watch` | Run tests in watch mode for an active development workflow. |
+| `npm run test:e2e` | Run End-to-End tests against the actual MySQL database. |
+| `npm run test:cov` | Generate a test coverage report to ensure logic is fully exercised. |
+
+### E2E Test Coverage
+The E2E suite verifies the following functional requirements (User Stories):
+1. **Student Registration:** Linking multiple students to a specific teacher.
+2. **Common Students:** Retrieving students shared by a list of teachers.
+3. **Suspension:** Marking specific students as suspended to prevent notifications.
+4. **Notification Filtering:** Retrieving recipients by checking teacher registration and `@mentions`, while strictly excluding suspended students.
+
+> **Pro Tip:** To ensure a clean state between test runs, the E2E suite uses a `beforeEach` hook to truncate tables. Use `npm run test:e2e -- --runInBand` if you need to execute tests sequentially.
+
+## Project Structure
+
+```
 admin_app
-|--.devcontainer/
-    |-- devcontainer.json
-|--.vscode/
-    |-= settings.json
-|
-
-
-
-## Production
-To run project in production
-`npm run start`
-This runs the pre-compiled code in `dist/` and results in a faster start-up process.
+├── src/
+│   ├── students/          # Domain logic (Entities, Controllers, Services, DTOs)
+│   ├── common/            # Shared Middleware (Logging), Filters, and Pipes
+│   ├── app.module.ts      # Root module & Async Database configuration
+│   └── main.ts            # Entry point, Swagger config, and Global Pipes
+├── test/                  # E2E test suites (Supertest)
+├── .devcontainer/         # Isolated development environment settings
+├── .vscode/               # Editor settings (Format on Save, ESLint config)
+├── builder.sh             # Helper script for common commands
+└── docker-compose.yml     # Infrastructure (MySQL 8.0)
+```

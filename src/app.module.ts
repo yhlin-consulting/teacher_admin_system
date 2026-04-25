@@ -1,29 +1,46 @@
-import { Module, OnModuleInit, Logger } from '@nestjs/common';
+import {
+  Module,
+  OnModuleInit,
+  Logger,
+  MiddlewareConsumer,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
-import { Student } from './student.entity';
-import { Teacher } from './teacher.entity';
+import { Student } from './students/entities/student.entity';
+import { Teacher } from './students/entities/teacher.entity';
 import { TypeOrmModule, InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { RegistrationModule } from './registration.module';
+import { StudentModule } from './students/student.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AppLoggerMiddleware } from './common/middleware/logger.middleware';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost', // This refers to the service name in docker-compose.yml
-      port: 3306,
-      username: 'appuser',
-      password: 'apppassword',
-      database: 'mydb',
-      entities: [Student, Teacher],
-      synchronize: true, // set to false for production
+    ConfigModule.forRoot({
+      isGlobal: true, // Makes ConfigService available everywhere
     }),
-    RegistrationModule,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get<string>('MYSQL_HOST'),
+        port: configService.get<number>('MYSQL_PORT'),
+        username: configService.get<string>('MYSQL_USER'),
+        password: configService.get<string>('MYSQL_PASSWORD'),
+        database: configService.get<string>('MYSQL_DATABASE'),
+        entities: [Student, Teacher],
+        synchronize: true,
+      }),
+    }),
+    StudentModule,
   ],
   controllers: [AppController],
   providers: [],
 })
 export class AppModule implements OnModuleInit {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(AppLoggerMiddleware).forRoutes('*');
+  }
   private readonly logger = new Logger(AppModule.name);
   constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
   async onModuleInit() {

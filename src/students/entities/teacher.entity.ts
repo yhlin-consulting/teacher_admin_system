@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToMany,
   JoinTable,
+  Index,
 } from 'typeorm';
 import { Student } from './student.entity';
 
@@ -12,10 +13,11 @@ export class Teacher {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Index({ unique: true })
+  @Column()
   email: string;
 
   @ManyToMany(() => Student, (student) => student.teachers)
-  @JoinTable()
+  @JoinTable({ name: 'teacher_students_registration' })
   students: Student[];
 }
