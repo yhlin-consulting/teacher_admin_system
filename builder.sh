@@ -5,9 +5,21 @@ set -e  # Exit immediately if a command exits with a non-zero status
 COMPOSE_FILE="docker-compose.yml"
 
 case "$1" in
+  build)
+    echo "🚀 Building containers..."
+    docker-compose -f $COMPOSE_FILE build
+    ;;
+  run-it)
+    echo "🚀 Starting all containers in interactive mode..."
+    docker-compose -f $COMPOSE_FILE up
+    ;;
   run)
-    echo "🚀 Starting containers..."
+    echo "🚀 Starting all containers in detached mode..."
     docker-compose -f $COMPOSE_FILE up -d
+    ;;
+  run-db)
+    echo "🚀 Starting db container only..."
+    docker-compose -f $COMPOSE_FILE up db -d
     ;;
   down)
     echo "🛑 Stopping containers..."
@@ -27,6 +39,10 @@ case "$1" in
     echo "Alternatively, enter Ctrl + D"
     # Note: Use the service name defined in your compose file (e.g., 'db')
     docker-compose -f $COMPOSE_FILE exec db mysql -u root -p
+    ;;
+  docker-build)
+    echo "Building app in a docker..."
+    docker build -t admin_app .
     ;;
   status)
     echo "🔍 Checking container status..."

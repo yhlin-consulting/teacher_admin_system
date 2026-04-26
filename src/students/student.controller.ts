@@ -12,7 +12,13 @@ import {
   Query,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiQuery,
+} from '@nestjs/swagger';
 
 @ApiTags('Students')
 @Controller('api')
@@ -37,6 +43,13 @@ export class StudentController {
 
   @Get('commonstudents')
   @ApiOperation({ summary: 'Retrieve students common to a list of teachers' })
+  @ApiQuery({
+    name: 'teacher',
+    required: false,
+    type: String,
+    isArray: true, // This tells Swagger to allow multiple "teacher" inputs
+    description: 'Teacher email(s) to filter by',
+  })
   @ApiResponse({ status: 200, description: 'Success' })
   async getCommonStudents(@Query('teacher') teacher: string | string[] = []) {
     if (!teacher || (Array.isArray(teacher) && teacher.length === 0)) {

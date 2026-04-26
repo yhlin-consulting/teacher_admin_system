@@ -30,6 +30,7 @@ describe('StudentService', () => {
     save: jest.fn(),
   };
   const mockStudentRepo = {
+    find: jest.fn(),
     findOne: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
@@ -195,6 +196,7 @@ describe('StudentService', () => {
         { email: 'mentioned@gmail.com' },
       ];
 
+      mockStudentRepo.find.mockResolvedValue([]);
       mockQueryBuilder.getRawMany.mockResolvedValue(dbResult);
 
       const result = await service.getNotificationRecipients(teacher, note);

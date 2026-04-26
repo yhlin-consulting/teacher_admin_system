@@ -2,7 +2,7 @@ import { Teacher } from './entities/teacher.entity';
 import { Student } from './entities/student.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, In, Repository } from 'typeorm';
 import { StudentStatus } from '../common/student-status.enum';
 
 interface StudentEmailRow {
@@ -92,6 +92,10 @@ export class StudentService {
   ): Promise<string[]> {
     const mentionedEmails = this.extractMentions(notification);
 
+    if (mentionedEmails.length > 0) {
+      await this.ensureStudentsExist(mentionedEmails);
+    }
+
     // Students registered to the teacher OR students in the mentioned list
     // AND student MUST NOT be suspended
     const students: StudentEmailRow[] = await this.studentRepo
@@ -121,5 +125,21 @@ export class StudentService {
     if (!matches) return [];
     // Remove the '@' character from the start of each match
     return matches.map((m) => m.substring(1));
+  }
+
+  private async ensureStudentsExist(emails: string[]): Promise<void> {
+    const existingStudents = await this.studentRepo.find({
+      where: { email: In(emails) },
+    });
+
+    const existingEmails = existingStudents.map((s) => s.email);
+    const newEmails = emails.filter((email) => !existingEmails.includes(email));
+
+    if (newEmails.length > 0) {
+      const newStudents = newEmails.map((email) =>
+        this.studentRepo.create({ email, status: StudentStatus.ACTIVE }),
+      );
+      await this.studentRepo.save(newStudents);
+    }
   }
 }

@@ -13,7 +13,7 @@ async function bootstrap() {
     .addTag('Students')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document); // UI will be at /api
+  SwaggerModule.setup('api', app, document); // docs will be at /api
 
   await app.listen(process.env.PORT ?? 3000);
 }
