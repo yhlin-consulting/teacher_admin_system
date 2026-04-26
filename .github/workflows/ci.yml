@@ -1,0 +1,54 @@
+name: CI Pipeline
+
+on:
+  push:
+    # Runs on every push to any branch
+  pull_request:
+    branches: [develop]
+
+jobs:
+  # Job 1: Static Analysis (Fastest)
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+
+  # Job 2: Functional Testing (Depends on Lint)
+  test-and-e2e:
+    needs: lint
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: ${{ vars.MYSQL_DATABASE }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      
+      - name: Run Unit Tests
+        run: npm run test -- --coverage
+
+      - name: Run E2E Tests
+        env:
+          MYSQL_HOST: ${{ vars.MYSQL_HOST }}
+          MYSQL_PORT: ${{ vars.MYSQL_PORT }}
+          MYSQL_USER: ${{ vars.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DATABASE: ${{ vars.MYSQL_DATABASE }}
+        run: npm run test:e2e
