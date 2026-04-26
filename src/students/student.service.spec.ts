@@ -5,6 +5,7 @@ import { Teacher } from './entities/teacher.entity';
 import { Student } from './entities/student.entity';
 import { StudentStatus } from '../common/student-status.enum';
 import { NotFoundException } from '@nestjs/common';
+import { DeepPartial } from 'typeorm';
 
 describe('StudentService', () => {
   let service: StudentService;
@@ -21,7 +22,11 @@ describe('StudentService', () => {
   };
   const mockTeacherRepo = {
     findOne: jest.fn(),
-    create: jest.fn().mockImplementation((dto) => dto),
+    create: jest
+      .fn()
+      .mockImplementation((dto: DeepPartial<Teacher>): Teacher => {
+        return dto as Teacher;
+      }),
     save: jest.fn(),
   };
   const mockStudentRepo = {
